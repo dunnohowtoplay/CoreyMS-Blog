@@ -6,9 +6,10 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
-    DeleteView
+    DeleteView,
     )
-from .models import Post
+from django.urls import reverse
+from .models import Post, Comment
 
 def home(request):
     context = {
@@ -42,6 +43,18 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
+        return super().form_valid(form)
+
+class AddCommentView(CreateView):
+    model = Comment
+    template_name = 'blog/add_comment.html'
+    fields = ['name', 'body']
+
+    def get_success_url(self):
+        return reverse('post-detail', kwargs={'pk': self.kwargs['pk']})
+
+    def form_valid(self, form):
+        form.instance.post_id = self.kwargs['pk']
         return super().form_valid(form)
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
